@@ -14,17 +14,7 @@ class ComparatorAgent:
         return ollama_model.invoke(prompt)
 
 def analyze_jd_resume(job_desc, resume_text):
-    # Extract keywords
     jd_keywords = ExtractorAgent().process(job_desc)
     resume_keywords = ExtractorAgent().process(resume_text)
-    
-    # Compare and get score
-    response = ComparatorAgent().process(jd_keywords, resume_keywords)
-    result = json.loads(response)
-    
-    # Save to SQLite
-    save_to_sqlite(job_desc, resume_text, response)
-    
-    # Generate embeddings (optional)
-    embeddings = get_embeddings([job_desc, resume_text])
-    return result, embeddings
+    result = ComparatorAgent().process(jd_keywords, resume_keywords)
+    return result

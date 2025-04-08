@@ -4,4 +4,5 @@ langchain-community
 ollama
 sqlite3
 yacana
+pydantic==2.10.6
 -e .
