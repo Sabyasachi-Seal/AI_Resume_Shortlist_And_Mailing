@@ -1,0 +1,7 @@
+gradio
+PyPDF2
+langchain-community
+ollama
+sqlite3
+yacana
+-e .

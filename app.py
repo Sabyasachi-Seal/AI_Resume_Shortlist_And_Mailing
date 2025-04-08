@@ -1,16 +1,18 @@
 import gradio as gr
 from src.processor import analyze_jd_resume
+from utils.helpers import input_pdf_text
 import pandas as pd
 import os
+import json
 
 # Load JDs from CSV
-jds_df = pd.read_csv("/data/jds.csv")
-job_options = jds_df['job_title'].tolist()
+jds_df = pd.read_csv("./data/jds.csv", encoding="ISO-8859-1")
+job_options = jds_df['Job Title'].tolist()
 
 def process_input(job_title, resume_file):
     if job_title and resume_file:
         # Get job description from CSV based on selected title
-        job_desc = jds_df[jds_df['job_title'] == job_title]['job_description'].iloc[0]
+        job_desc = jds_df[jds_df['Job Title'] == job_title]['Job Description'].iloc[0]
         
         # Extract text from uploaded resume
         resume_path = f"/tmp/{resume_file.name}"
