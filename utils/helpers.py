@@ -1,6 +1,8 @@
 import PyPDF2
 import sqlite3
 from ollama import Client
+import numpy as np
+from numpy.linalg import norm
 
 def input_pdf_text(file_path):
     """Extract text from a PDF file."""
@@ -21,7 +23,13 @@ def save_to_sqlite(job_desc, resume_text, response):
     conn.commit()
     conn.close()
 
-def get_embeddings(texts, model="llama3.2:3b"):
-    """Generate embeddings using Ollama."""
+def get_embeddings(texts, model="llama3.2:latest"):
+    """Generate embeddings for a list of texts using Ollama."""
     client = Client(host='http://localhost:11434')
-    return client.embed(model=model, input=texts)
+    return client.embed(model=model, input=texts)["embeddings"]
+
+def cosine_similarity(vec1, vec2):
+    """Calculate cosine similarity between two vectors, scaled to 0-100."""
+    if not np.any(vec1) or not np.any(vec2) or len(vec1) != len(vec2):
+        return 0.0
+    return np.dot(vec1, vec2) / (norm(vec1) * norm(vec2)) * 100

@@ -1,11 +1,10 @@
 import pandas as pd
 import os
-from src.processor import analyze_jd_resume
+from src.processor import ATSProcessor
 from utils.helpers import input_pdf_text
-import json
 import tempfile
 
-def main():
+def test_core():
     # Load JDs from CSV
     jds_path = "./data/jds.csv"
     if not os.path.exists(jds_path):
@@ -18,7 +17,7 @@ def main():
         return
 
     # Select a sample job title (first one for testing)
-    sample_job_title = jds_df['Job Title'].iloc[7]
+    sample_job_title = jds_df['Job Title'].iloc[0]
     job_desc = jds_df[jds_df['Job Title'] == sample_job_title]['Job Description'].iloc[0]
     print(f"Testing with Job Title: {sample_job_title}")
     print(f"Job Description: {job_desc[:200]}...")  # Print first 200 chars
@@ -47,13 +46,14 @@ def main():
 
     print(f"Resume Text (first 200 chars): {resume_text[:200]}...")
 
-    # Analyze
+    # Test the processor
     try:
-        result = analyze_jd_resume(job_desc, resume_text)
+        processor = ATSProcessor()
+        result = processor.analyze(job_desc, resume_text)
         print("\nAnalysis Result:")
         print(result)
     except Exception as e:
-        print(f"Error during analysis: {str(e)}")
+        print(f"Error during testing: {str(e)}")
 
 if __name__ == "__main__":
-    main()
+    test_core()

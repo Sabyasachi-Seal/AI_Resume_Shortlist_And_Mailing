@@ -1,0 +1,27 @@
+{
+    "jd_keywords": [
+        "software engineer",
+        "design",
+        "develop",
+        "maintain",
+        "efficient code",
+        "troubleshoot issues",
+        "collaborate with teams"
+    ],
+    "resume_keywords": [
+        "Python",
+        "Java",
+        "C++",
+        "databases",
+        "web development",
+        "software frameworks",
+        "cybersecurity",
+        "penetration testing",
+        "risk assessment",
+        "AWS Certified Solutions Architect",
+        "AI ethics"
+    ],
+    "mismatches": [
+        "Cybersecurity" // mismatched keyword, JD doesn't mention cybersecurity explicitly
+    ]
+}

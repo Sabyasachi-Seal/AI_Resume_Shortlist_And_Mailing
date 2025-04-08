@@ -1,6 +1,6 @@
 gradio
 PyPDF2
-langchain-community
+langchain-ollama
 ollama
 sqlite3
 yacana
