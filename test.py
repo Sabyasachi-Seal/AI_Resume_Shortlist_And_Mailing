@@ -1,7 +1,7 @@
 import os
 from src.processor import ATSVectorProcessor
 import tempfile
-from utils.mailer import extract_email, generate_email, send_email
+from utils.mailer import extract_email, generate_email_with_ollama, send_email
 from utils.helpers import input_pdf_text
 
 def test_core():
@@ -52,7 +52,7 @@ def test_core():
                     "match_percentage": best_match["match_percentage"],
                     "email": candidate_email
                 })
-                email_content = generate_email(resume_file, best_match["job_title"], best_match["match_percentage"])
+                email_content = generate_email_with_ollama(resume_file, best_match["job_title"], best_match["match_percentage"])
                 print(f"Generated Email Content:\n{email_content}")
                 # send_email(candidate_email, email_content)
         except Exception as e:

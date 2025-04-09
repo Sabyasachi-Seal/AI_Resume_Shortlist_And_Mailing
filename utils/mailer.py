@@ -1,6 +1,7 @@
 import re
 from email.mime.text import MIMEText
 import smtplib
+from ollama import Client
 from datetime import datetime, timedelta
 
 def extract_email(resume_text):
@@ -13,32 +14,47 @@ def extract_email(resume_text):
     print("Warning: No email found in resume text.")
     return None
 
-def generate_email(resume_file, job_title, match_percentage):
-    """Generate a personalized email for the candidate."""
+def generate_email_with_ollama(resume_file, job_title, match_percentage):
+    """Generate a personalized email using an Ollama model."""
     # Placeholder interview time (e.g., 2 days from now at 10:00 AM PDT)
     interview_time = (datetime.now() + timedelta(days=2)).replace(hour=10, minute=0, second=0, microsecond=0)
     interview_format = "Video call via Zoom"
     
-    email_content = f"""
-Subject: Interview Invitation for {job_title} Position
+    # Initialize Ollama client
+    ollama_client = Client(host='http://localhost:11434')
+    
+    # Prompt for the model
+    prompt = f"""
+You are a professional HR assistant. Generate a polite and personalized email invitation for an interview based on the following details:
+- Resume File: {resume_file}
+- Job Title: {job_title}
+- Match Percentage: {match_percentage}%
+- Interview Date and Time: {interview_time.strftime('%B %d, %Y, %I:%M %p PDT')}
+- Interview Format: {interview_format}
+- Company: [Your Company Name]
+- Contact Email: contact@yourcompany.com
 
-Dear Candidate (Resume: {resume_file}),
+The email should include:
+- A subject line
+- A greeting addressing the candidate (e.g., "Dear Candidate")
+- A thank you note mentioning the match percentage
+- Interview details (date, time, format)
+- A call to action for confirmation within 48 hours
+- A closing with the company name and contact email
 
-Thank you for applying! Based on your impressive match (score: {match_percentage}%), we are pleased to invite you for an interview for the {job_title} position.
-
-Interview Details:
-- Date and Time: {interview_time.strftime('%B %d, %Y, %I:%M %p PDT')}
-- Format: {interview_format}
-- Next Steps: Please confirm your availability by replying to this email within 48 hours. A Zoom link will be sent upon confirmation.
-
-We look forward to discussing your qualifications further!
-
-Best regards,
-The Hiring Team
-[Your Company Name]
-contact@yourcompany.com
+Return the email as a plain text string with each section separated by a newline.
     """
-    return email_content.strip()
+    
+    # Invoke the model
+    response = ollama_client.chat(model="llama3.2:latest", messages=[{"role": "user", "content": prompt}])
+    email_content = response['message']['content'].strip()
+    
+    # Extract subject (first line) and ensure proper formatting
+    lines = email_content.split('\n')
+    subject = lines[0].replace("Subject:", "").strip() if lines[0].startswith("Subject:") else f"Interview Invitation for {job_title}"
+    body = "\n".join(lines[1:]).strip()
+    
+    return f"{subject}\n{body}"
 
 def send_email(to_email, email_content):
     """Send the email using SMTP (e.g., Gmail for testing)."""
@@ -47,8 +63,11 @@ def send_email(to_email, email_content):
     password = "your_app_password"  # Use an App Password if 2FA is enabled
 
     # Create MIMEText object
-    msg = MIMEText(email_content)
-    msg['Subject'] = email_content.split('\n')[0][8:]  # Extract subject from content
+    lines = email_content.split('\n', 1)
+    subject = lines[0]
+    body = lines[1] if len(lines) > 1 else email_content
+    msg = MIMEText(body)
+    msg['Subject'] = subject
     msg['From'] = from_email
     msg['To'] = to_email
 
