@@ -1,27 +1,9 @@
-import pandas as pd
 import os
-from src.processor import ATSProcessor
+from src.processor import ATSVectorProcessor
 from utils.helpers import input_pdf_text
 import tempfile
 
 def test_core():
-    # Load JDs from CSV
-    jds_path = "./data/jds.csv"
-    if not os.path.exists(jds_path):
-        print(f"Error: {jds_path} not found. Please ensure the file exists.")
-        return
-    
-    jds_df = pd.read_csv(jds_path, encoding="ISO-8859-1")
-    if jds_df.empty:
-        print("Error: jds.csv is empty or invalid.")
-        return
-
-    # Select a sample job title (first one for testing)
-    sample_job_title = jds_df['Job Title'].iloc[0]
-    job_desc = jds_df[jds_df['Job Title'] == sample_job_title]['Job Description'].iloc[0]
-    print(f"Testing with Job Title: {sample_job_title}")
-    print(f"Job Description: {job_desc[:200]}...")  # Print first 200 chars
-
     # Process a sample resume from /data/resumes/
     resumes_dir = "./data/resume/"
     if not os.path.exists(resumes_dir):
@@ -33,7 +15,7 @@ def test_core():
         print(f"Error: No PDF files found in {resumes_dir}.")
         return
 
-    sample_resume_file = os.path.join(resumes_dir, resume_files[0])
+    sample_resume_file = os.path.join(resumes_dir, resume_files[11])
     print(f"Using Resume: {sample_resume_file}")
 
     # Extract text from the resume
@@ -46,12 +28,13 @@ def test_core():
 
     print(f"Resume Text (first 200 chars): {resume_text[:200]}...")
 
-    # Test the processor
     try:
-        processor = ATSProcessor()
-        result = processor.analyze(job_desc, resume_text)
-        print("\nAnalysis Result:")
-        print(result)
+        processor = ATSVectorProcessor(top_n=3)  # Adjust top_n as needed
+        matches = processor.analyze(resume_text)
+        print("\nTop Matching Job Titles:")
+
+        for match in matches:
+            print(f"Job Title: {match['job_title']}, Match Percentage: {match['match_percentage']}%")
     except Exception as e:
         print(f"Error during testing: {str(e)}")
 
