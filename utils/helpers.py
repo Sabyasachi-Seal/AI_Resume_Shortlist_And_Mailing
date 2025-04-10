@@ -3,6 +3,12 @@ import sqlite3
 from ollama import Client
 import numpy as np
 from numpy.linalg import norm
+import os
+
+# Add a global variable to cache the database connection and state
+_db_connection = None
+_data_loaded = False
+
 
 def input_pdf_text(file_path):
     """Extract text from a PDF file."""
@@ -37,17 +43,36 @@ def cosine_similarity(vec1, vec2):
         return 0.0
     return np.dot(vec1, vec2) / (norm(vec1) * norm(vec2)) * 100
 
+
 def initialize_sqlite_db():
     """Initialize SQLite database and create jobs table."""
+    global _db_connection
+    if _db_connection is None:
+        _db_connection = sqlite3.connect('ats_jobs.db')
+        cursor = _db_connection.cursor()
+        cursor.execute('''CREATE TABLE IF NOT EXISTS jobs 
+                          (id INTEGER PRIMARY KEY, job_title TEXT, job_description TEXT, embedding BLOB)''')
+        _db_connection.commit()
+    return _db_connection
+
+def is_database_initialized():
+    """Check if the database file exists and contains data."""
+    if not os.path.exists('ats_jobs.db'):
+        return False
     conn = sqlite3.connect('ats_jobs.db')
     cursor = conn.cursor()
-    cursor.execute('''CREATE TABLE IF NOT EXISTS jobs 
-                      (id INTEGER PRIMARY KEY, job_title TEXT, job_description TEXT, embedding BLOB)''')
-    conn.commit()
-    return conn
+    cursor.execute("SELECT COUNT(*) FROM jobs")
+    count = cursor.fetchone()[0]
+    conn.close()
+    return count > 0
 
 def load_jds_to_sqlite(jds_df):
     """Load job descriptions from CSV into SQLite."""
+    global _data_loaded
+    if _data_loaded or is_database_initialized():
+        print("Job descriptions are already loaded into SQLite.")
+        return
+
     conn = initialize_sqlite_db()
     cursor = conn.cursor()
     cursor.execute("DELETE FROM jobs")  # Clear existing data (optional)
@@ -60,8 +85,15 @@ def load_jds_to_sqlite(jds_df):
             (row['Job Title'], row['Job Description'], embedding.tobytes())
         )
     conn.commit()
-    conn.close()
+    _data_loaded = True  # Mark data as loaded
     print(f"Loaded {len(jds_df)} job descriptions into SQLite.")
+
+def close_sqlite_connection():
+    """Close the SQLite connection."""
+    global _db_connection
+    if _db_connection is not None:
+        _db_connection.close()
+        _db_connection = None
 
 def query_sqlite_db(resume_text, top_n=5):
     """Query SQLite for top N similar job descriptions based on resume."""
