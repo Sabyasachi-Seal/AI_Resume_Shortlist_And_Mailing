@@ -7,7 +7,6 @@ import json
 class ATSVectorProcessor:
     def __init__(self, top_n=5):
         try:
-            # self.model = OllamaLLM(base_url='http://localhost:11434', model='ats_model') 
             self.top_n = top_n
             # Load JDs into SQLite on initialization (one-time setup)
             jds_path = "./data/jds.csv"
@@ -27,10 +26,6 @@ class ATSVectorProcessor:
         try:
             # Query SQLite for top N matches
             matches = query_sqlite_db(resume_text, self.top_n)
-
-            # Save results to SQLite (optional, for logging)
-            # response = json.dumps({"matches": matches})
-            # save_to_sqlite("", resume_text, response)  # Empty job_desc as this is resume-only
 
             return matches
         except Exception as e:

@@ -4,6 +4,7 @@ from ollama import Client
 import numpy as np
 from numpy.linalg import norm
 import os
+from scipy.stats import pearsonr
 
 # Add a global variable to cache the database connection and state
 _db_connection = None
@@ -29,7 +30,7 @@ def save_to_sqlite(job_desc, resume_text, response):
     conn.commit()
     conn.close()
 
-def get_embeddings(texts, model="nomic-embed-text"):
+def get_embeddings(texts, model="nomic-embed-text:v1.5"):
     """Generate embeddings for a list of texts using Ollama."""
     client = Client(host='http://localhost:11434')
     embedding_response = client.embed(model=model, input=texts)
@@ -37,11 +38,11 @@ def get_embeddings(texts, model="nomic-embed-text"):
     # print("Embedding response structure:", embedding_response)
     return embedding_response["embeddings"]
 
-def cosine_similarity(vec1, vec2):
-    """Calculate cosine similarity between two vectors, scaled to 0-100."""
-    if not np.any(vec1) or not np.any(vec2) or len(vec1) != len(vec2):
-        return 0.0
-    return np.dot(vec1, vec2) / (norm(vec1) * norm(vec2)) * 100
+# def cosine_similarity(vec1, vec2):
+#     """Calculate cosine similarity between two vectors, scaled to 0-100."""
+#     if not np.any(vec1) or not np.any(vec2) or len(vec1) != len(vec2):
+#         return 0.0
+#     return np.dot(vec1, vec2) / (norm(vec1) * norm(vec2)) * 100
 
 
 def initialize_sqlite_db():
@@ -96,25 +97,32 @@ def close_sqlite_connection():
         _db_connection = None
 
 def query_sqlite_db(resume_text, top_n=5):
-    """Query SQLite for top N similar job descriptions based on resume."""
+    """Query SQLite for top N similar job descriptions based on resume using Manhattan Distance for semantic similarity."""
     conn = initialize_sqlite_db()
     cursor = conn.cursor()
-    embeddings = get_embeddings([resume_text])
-    resume_embedding_list = embeddings[0]  # Extract the first embedding
-    resume_embedding = np.array(resume_embedding_list, dtype=np.float32)  # Convert to NumPy array
     
+    # Generate embedding for the resume
+    embeddings = get_embeddings([resume_text])
+    resume_embedding = np.array(embeddings[0], dtype=np.float32)  # Convert to NumPy array
+    
+    # Fetch all job data
     cursor.execute("SELECT job_title, job_description, embedding FROM jobs")
     jds = cursor.fetchall()
     
     matches = []
     for jd in jds:
         jd_embedding = np.frombuffer(jd[2], dtype=np.float32)
-        similarity = cosine_similarity(resume_embedding, jd_embedding)
+        
+        if len(resume_embedding) == len(jd_embedding):
+            similarity_percentage = np.dot(resume_embedding, jd_embedding) * 100
+        else:
+            similarity_percentage = 0.0  # Default to 0 if computation fails
+        
         matches.append({
             "job_title": jd[0],
-            "match_percentage": round(similarity, 2)
+            "match_percentage": round(similarity_percentage, 2)
         })
     
-    # Sort by match percentage and get top N
+    # Sort by match percentage (higher is better) and get top N
     matches.sort(key=lambda x: x["match_percentage"], reverse=True)
     return matches[:top_n]
