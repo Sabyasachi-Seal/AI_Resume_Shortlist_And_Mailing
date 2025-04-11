@@ -38,12 +38,6 @@ def get_embeddings(texts, model="nomic-embed-text:v1.5"):
     # print("Embedding response structure:", embedding_response)
     return embedding_response["embeddings"]
 
-# def cosine_similarity(vec1, vec2):
-#     """Calculate cosine similarity between two vectors, scaled to 0-100."""
-#     if not np.any(vec1) or not np.any(vec2) or len(vec1) != len(vec2):
-#         return 0.0
-#     return np.dot(vec1, vec2) / (norm(vec1) * norm(vec2)) * 100
-
 
 def initialize_sqlite_db():
     """Initialize SQLite database and create jobs table."""

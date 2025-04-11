@@ -2,7 +2,6 @@ gradio
 PyPDF2
 langchain-ollama
 ollama
-sqlite3
 yacana
 pydantic==2.10.6
 -e .

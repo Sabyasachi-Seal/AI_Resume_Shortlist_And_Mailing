@@ -92,10 +92,10 @@ def process_resumes(resume_zip='./data/resume/'):
     )
 
 # Gradio interface
-with gr.Blocks(title="Smart ATS with Gradio") as demo:
+with gr.Blocks(title="Smart ATS with Ollama") as demo:
     gr.Markdown("""
     # Smart ATS Using Ollama
-    Upload a ZIP file containing resume PDFs to process them live, find the most matched job, determine shortlisting, and generate personalized emails for shortlisted candidates.
+    Process resume PDFs in real-time to identify the best-matched job, determine shortlisting eligibility, and generate personalized emails for shortlisted candidates.
     """)
 
     
